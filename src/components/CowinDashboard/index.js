@@ -6,7 +6,7 @@ import VaccinationByGender from '../VaccinationByGender'
 import './index.css'
 
 class CowinDashboard extends Component {
-  state = {vaccineData: '', isLoading: true}
+  state = {vaccineData: null, isLoading: true, hasError: false}
 
   componentDidMount() {
     this.getData()
@@ -21,50 +21,21 @@ class CowinDashboard extends Component {
 
   getData = async () => {
     const api = 'https://apis.ccbp.in/covid-vaccination-data'
-    const response = await fetch(api)
-    const data = await response.json()
-    this.setState({vaccineData: data, isLoading: false})
-  }
 
-  //   renderBarCharts = () => {
-  //     const {vaccineData} = this.state
-  //     return (
-  //       <div className="mini-container">
-  //         <h1 className="chart-title">CoWIN Vaccination in India</h1>
-  //         <div className="chart-container">
-  //           <h1 className="chart-title">Vaccination Coverage</h1>
-  //           <ResponsiveContainer width="100%" height={500}>
-  //             <BarChart
-  //               data={vaccineData.last_7_days_vaccination}
-  //               margin={{top: 5}}
-  //             >
-  //               <XAxis
-  //                 dataKey="vaccine_date"
-  //                 tick={{stroke: '#6c757d', strokewidth: 2}}
-  //               />
-  //               <YAxis
-  //                 tickFormatter={this.dataFormatter}
-  //                 tick={{stroke: '#6c757d', strokewidth: 0}}
-  //               />
-  //               <Legend wrapperStyle={{padding: 25}} />
-  //               <Bar
-  //                 dataKey="dose_1"
-  //                 name="Dose 1"
-  //                 barSize="20%"
-  //                 fill="#5a8dee"
-  //               />
-  //               <Bar
-  //                 dataKey="dose_2"
-  //                 name="Dose 2"
-  //                 barSize="20%"
-  //                 fill="#f54394"
-  //               />
-  //             </BarChart>
-  //           </ResponsiveContainer>
-  //         </div>
-  //       </div>
-  //     )
-  //   }
+    try {
+      const response = await fetch(api)
+
+      if (!response.ok) {
+        throw new Error('Failed to fetch data')
+      }
+
+      const data = await response.json()
+      this.setState({vaccineData: data, isLoading: false, hasError: false})
+    } catch (error) {
+      console.error(error)
+      this.setState({isLoading: false, hasError: true})
+    }
+  }
 
   renderSuccessView = () => {
     const {vaccineData, isLoading} = this.state
@@ -111,19 +82,14 @@ class CowinDashboard extends Component {
   )
 
   renderTheResult = () => {
-    const {vaccineData} = this.state
-    if (vaccineData) {
-      return this.renderSuccessView()
+    const {hasError} = this.state
+    if (hasError) {
+      return this.renderFailureView()
     }
-    return this.renderFailureView()
+    return this.renderSuccessView()
   }
 
   render() {
-    const {vaccineData} = this.state
-    console.log(vaccineData.last_7_days_vaccination)
-    console.log(vaccineData.vaccination_by_age)
-    console.log(vaccineData.vaccination_by_gender)
-
     return (
       <div className="container">
         <div className="title-container">
